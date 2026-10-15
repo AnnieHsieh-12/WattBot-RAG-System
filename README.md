@@ -34,8 +34,8 @@
 - [Notebook Setup](#notebook-setup)
 - [Team Members](#team-members)
 - [Citation](#citation)
+- [Related Work](#related-work)
 - [License](#license)
-- [Acknowledgments](#acknowledgments)
 - [繁體中文版](README.zh-TW.md)
 
 ## Introduction
@@ -531,14 +531,10 @@ The notebook also includes separate PDF parsing and retrieval tests. Those cells
 }
 ```
 
+## Related Work
+
+See the [technical report](docs/WattBot2025_AttentionPlease_Technical_Report.pdf) for the literature review and the KohakuRAG case study that informed the team's approach.
+
 ## License
 
 No `LICENSE` file is currently included in this repository. Licensing terms have not been specified in the repository.
-
-## Acknowledgments
-
-- The WattBot competition organizers at ML+X, University of Wisconsin–Madison.
-- Google for Gemini API access.
-- The open-source community for the tools and libraries supporting this project.
-
-See the [technical report](docs/WattBot2025_AttentionPlease_Technical_Report.pdf) for related work, including the KohakuRAG case study that informed the team's approach.

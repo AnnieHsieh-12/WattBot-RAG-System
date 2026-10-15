@@ -21,8 +21,8 @@
 - [Notebook 執行設定](#notebook-執行設定)
 - [團隊成員](#團隊成員)
 - [引用格式](#引用格式)
+- [相關工作](#相關工作)
 - [授權](#授權)
-- [致謝](#致謝)
 
 ## 專案介紹
 
@@ -519,16 +519,12 @@ Notebook 另有 PDF 解析與檢索測試；它們是獨立實驗，不是最後
 }
 ```
 
+## 相關工作
+
+文獻回顧，以及啟發團隊方法設計的 KohakuRAG 案例，請參閱[技術報告](docs/WattBot2025_AttentionPlease_Technical_Report.pdf)。
+
 ## 授權
 
 目前 repo 未包含 `LICENSE` 檔案，尚未在 repository 中明定授權條款。
-
-## 致謝
-
-- WattBot 競賽主辦單位：威斯康辛大學麥迪遜分校 ML+X。
-- Google 提供 Gemini API 存取。
-- 提供本專案所使用工具與函式庫的開源社群。
-
-相關研究與啟發團隊設計的 KohakuRAG 案例，可參閱[技術報告](docs/WattBot2025_AttentionPlease_Technical_Report.pdf)。
 
 [English](README.md) · [回到中文目錄](#中文目錄)
