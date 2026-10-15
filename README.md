@@ -367,8 +367,8 @@ HERO combines structured ingestion, sparse–dense retrieval, and reranking to i
 <table width="100%">
   <thead><tr>
     <th width="500" align="left">Metric</th>
-    <th width="500" align="left">Baseline (report Table 16)</th>
-    <th width="500" align="left">HERO (report Table 16)</th>
+    <th width="500" align="left">Baseline</th>
+    <th width="500" align="left">HERO</th>
     <th width="500" align="left">Difference</th>
   </tr></thead>
   <tbody>
@@ -901,8 +901,8 @@ HERO 透過結構化擷取、稀疏與稠密檢索及重排序改善證據選擇
 <table width="100%">
   <thead><tr>
     <th width="500" align="left">指標</th>
-    <th width="500" align="left">Baseline（報告 Table 16）</th>
-    <th width="500" align="left">HERO（報告 Table 16）</th>
+    <th width="500" align="left">Baseline</th>
+    <th width="500" align="left">HERO</th>
     <th width="500" align="left">差異</th>
   </tr></thead>
   <tbody>
