@@ -20,7 +20,6 @@
 - [實驗成果](#實驗成果)
 - [Notebook 執行設定](#notebook-執行設定)
 - [團隊成員](#團隊成員)
-- [引用格式](#引用格式)
 - [相關工作](#相關工作)
 - [授權](#授權)
 
@@ -453,12 +452,11 @@ Notebook 的 Recall@K 判斷前 K 個結果是否命中任一標準引用，實�
 %pip install docling easyocr opencv-python-headless rank-bm25 sentence-transformers faiss-cpu pandas numpy requests pdfminer.six pillow tqdm google-genai
 ```
 
-3. 在 **Docling／OCR 處理 cell 之前**補上以下匯入。公開版本在較晚才匯入 `np`，生成階段則使用未匯入的 `time` 與 `types`：
+3. 在 **Docling／OCR 處理 cell 之前**補上以下匯入。公開版本在較晚才匯入 `np`，並且呼叫 `time.sleep()`，卻沒有匯入 `time`。`types` 已在 `_call_gpt()` 內、首次使用之前匯入，不需要另外補上。
 
 ```python
 import numpy as np
 import time
-from google.genai import types
 ```
 
 4. 在 Gemini 生成 cell 中，替換原本的佔位金鑰與 client 初始化。若使用 Colab Secrets，建立 `GOOGLE_API_KEY` 並允許 notebook 存取，再使用：
@@ -505,19 +503,6 @@ Notebook 另有 PDF 解析與檢索測試；它們是獨立實驗，不是最後
 - **Bo-Hao Chen** - 國立政治大學金融學系
 - **Yi-Chen Hsiao** - 國立政治大學財政學系
 - **Yi-Yang Xue** - 國立政治大學資訊科學系
-
-## 引用格式
-
-若本專案對你的研究或實作有幫助，歡迎使用以下格式引用：
-
-```bibtex
-@misc{wattbot2025_hero,
-  title = {WattBot 2025: Retrieval-Augmented Generation for ESG Intelligence},
-  author = {Wu, Shao-Hua and Hsieh, Pei-Ju and Chen, Bo-Hao and Hsiao, Yi-Chen and Xue, Yi-Yang},
-  year = {2025},
-  url = {https://github.com/AnnieHsieh-12/WattBot-RAG-System}
-}
-```
 
 ## 相關工作
 

@@ -33,7 +33,6 @@
 - [Experimental Results](#experimental-results)
 - [Notebook Setup](#notebook-setup)
 - [Team Members](#team-members)
-- [Citation](#citation)
 - [Related Work](#related-work)
 - [License](#license)
 - [繁體中文版](README.zh-TW.md)
@@ -467,12 +466,11 @@ These instructions are based on the checked-in code. **A clean-environment, end-
 %pip install docling easyocr opencv-python-headless rank-bm25 sentence-transformers faiss-cpu pandas numpy requests pdfminer.six pillow tqdm google-genai
 ```
 
-3. Add the following imports **before the Docling/OCR processing cell**. The checked-in notebook uses `np` before its later import, and the generation cell uses `time` and `types` without importing them:
+3. Add the following imports **before the Docling/OCR processing cell**. The checked-in notebook uses `np` before its later import and calls `time.sleep()` without importing `time`. The `types` import is already present inside `_call_gpt()` before its first use.
 
 ```python
 import numpy as np
 import time
-from google.genai import types
 ```
 
 4. In the Gemini generation cell, replace the existing placeholder key and client initialization. For Colab Secrets, create a secret named `GOOGLE_API_KEY`, allow notebook access, then use:
@@ -519,17 +517,6 @@ The notebook also includes separate PDF parsing and retrieval tests. Those cells
 - **Bo-Hao Chen** - Department of Money and Banking, National Chengchi University
 - **Yi-Chen Hsiao** - Department of Finance, National Chengchi University
 - **Yi-Yang Xue** - Department of Computer Science, National Chengchi University
-
-## Citation
-
-```bibtex
-@misc{wattbot2025_hero,
-  title = {WattBot 2025: Retrieval-Augmented Generation for ESG Intelligence},
-  author = {Wu, Shao-Hua and Hsieh, Pei-Ju and Chen, Bo-Hao and Hsiao, Yi-Chen and Xue, Yi-Yang},
-  year = {2025},
-  url = {https://github.com/AnnieHsieh-12/WattBot-RAG-System}
-}
-```
 
 ## Related Work
 
