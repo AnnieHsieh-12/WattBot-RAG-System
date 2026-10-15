@@ -1,4 +1,4 @@
-# WattBot 2025 - Team Attention Please 🔋
+# WattBot 2025 - Team Name: Attention Please 🔋
 
 <div align="center">
 
