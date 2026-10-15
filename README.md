@@ -466,14 +466,7 @@ These instructions are based on the checked-in code. **A clean-environment, end-
 %pip install docling easyocr opencv-python-headless rank-bm25 sentence-transformers faiss-cpu pandas numpy requests pdfminer.six pillow tqdm google-genai
 ```
 
-3. Add the following imports **before the Docling/OCR processing cell**. The checked-in notebook uses `np` before its later import and calls `time.sleep()` without importing `time`. The `types` import is already present inside `_call_gpt()` before its first use.
-
-```python
-import numpy as np
-import time
-```
-
-4. In the Gemini generation cell, replace the existing placeholder key and client initialization. For Colab Secrets, create a secret named `GOOGLE_API_KEY`, allow notebook access, then use:
+3. In the Gemini generation cell, replace the existing placeholder key and client initialization. For Colab Secrets, create a secret named `GOOGLE_API_KEY`, allow notebook access, then use:
 
 ```python
 from google.colab import userdata
@@ -482,7 +475,7 @@ from google import genai
 client = genai.Client(api_key=userdata.get("GOOGLE_API_KEY"))
 ```
 
-5. Execute the workflow in this order: CSV loading → PDF download → EasyOCR initialization → Docling/OCR processing → BM25/dense indexes → retrieval and reranking helpers → Gemini generator and submission. Evaluation and cache-cleanup cells are optional.
+4. Execute the workflow in this order: CSV loading → PDF download → EasyOCR initialization → Docling/OCR processing → BM25/dense indexes → retrieval and reranking helpers → Gemini generator and submission. Evaluation and cache-cleanup cells are optional.
 
 The code uses these locations:
 

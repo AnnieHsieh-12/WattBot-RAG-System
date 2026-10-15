@@ -452,14 +452,7 @@ Notebook 的 Recall@K 判斷前 K 個結果是否命中任一標準引用，實�
 %pip install docling easyocr opencv-python-headless rank-bm25 sentence-transformers faiss-cpu pandas numpy requests pdfminer.six pillow tqdm google-genai
 ```
 
-3. 在 **Docling／OCR 處理 cell 之前**補上以下匯入。公開版本在較晚才匯入 `np`，並且呼叫 `time.sleep()`，卻沒有匯入 `time`。`types` 已在 `_call_gpt()` 內、首次使用之前匯入，不需要另外補上。
-
-```python
-import numpy as np
-import time
-```
-
-4. 在 Gemini 生成 cell 中，替換原本的佔位金鑰與 client 初始化。若使用 Colab Secrets，建立 `GOOGLE_API_KEY` 並允許 notebook 存取，再使用：
+3. 在 Gemini 生成 cell 中，替換原本的佔位金鑰與 client 初始化。若使用 Colab Secrets，建立 `GOOGLE_API_KEY` 並允許 notebook 存取，再使用：
 
 ```python
 from google.colab import userdata
@@ -468,7 +461,7 @@ from google import genai
 client = genai.Client(api_key=userdata.get("GOOGLE_API_KEY"))
 ```
 
-5. 依序執行：CSV 載入 → PDF 下載 → EasyOCR 初始化 → Docling／OCR 處理 → BM25／向量索引 → 檢索與重排序函式 → Gemini 生成與匯出。評估與清除快取 cell 為選用步驟。
+4. 依序執行：CSV 載入 → PDF 下載 → EasyOCR 初始化 → Docling／OCR 處理 → BM25／向量索引 → 檢索與重排序函式 → Gemini 生成與匯出。評估與清除快取 cell 為選用步驟。
 
 程式使用的路徑如下：
 
