@@ -39,16 +39,14 @@
 
 ## Introduction
 
-WattBot asks a practical question: **can a system find the evidence behind an AI sustainability claim?** Answers often depend on a single value inside a table or figure, expressed in units that differ from the question.
+WattBot 2025 evaluates systems that answer questions about the environmental impact of AI workloads using evidence from technical documents. Many answers depend on values in tables or figures and require unit normalization.
 
-Our system retrieves the relevant evidence and returns a normalized answer with document citations and supporting text. It also handles questions that cannot be answered from the available documents.
-
-The project develops two approaches:
+This repository contains two approaches developed by Team Attention Please. Both return a normalized answer, document references, supporting text, and an abstention when the source documents do not contain enough evidence:
 
 - **BM25 Baseline** — text and table retrieval with query routing and two-stage answer generation.
 - **HERO** — layout-aware parsing and OCR, sparse–dense retrieval, weighted rank fusion, CrossEncoder reranking, and question-specific generation.
 
-The key finding is the **table paradox**: adding raw tables can introduce noise into keyword retrieval, while removing them discards important numerical evidence. HERO addresses this by preserving content types and giving table and OCR evidence explicit weights during retrieval.
+A baseline experiment found that adding raw Markdown tables reduced several BM25 retrieval metrics, while removing tables also removed useful numerical evidence. HERO keeps text, table, and OCR chunks separate and weights them independently during retrieval.
 
 ## Technology Stack
 
@@ -99,7 +97,7 @@ The key finding is the **table paradox**: adding raw tables can introduce noise 
   </tbody>
 </table>
 
-The stack above follows the public notebooks. The technical report describes additional experimental configurations.
+The entries above reflect the public notebooks. The technical report also records experimental configurations that are not included in those notebooks.
 
 ## System Architecture
 
@@ -109,7 +107,7 @@ The stack above follows the public notebooks. The technical report describes add
 
 *Figure 2 from the [technical report, page 5](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=5).*
 
-The baseline separates document processing from question answering:
+The baseline has five steps:
 
 1. **Document extraction.** Parse PDFs and prepare text and table chunks.
 2. **Sparse indexing.** Build BM25 indexes for lexical matching.
@@ -125,13 +123,13 @@ The report diagram presents text-only and hybrid indexes; the notebook routing i
 
 *Figure 4 from the [technical report, page 7](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=7).*
 
-HERO extends the baseline in five stages:
+HERO adds five stages to the baseline:
 
 1. **Visual-aware ingestion.** Docling extracts document elements; EasyOCR and OpenCV turn text inside figures into searchable evidence. Chunks retain their content type and document ID.
 2. **Dual retrieval.** BM25 handles exact terms and numbers, while dense embeddings retrieve semantically related passages.
 3. **Weighted reciprocal rank fusion.** Combine sparse and dense rankings, boosting **tables ×2.0**, **OCR ×1.8**, and **author/year matches ×2.0**.
 4. **CrossEncoder reranking.** Jointly score each query–chunk pair to prioritize relevant evidence.
-5. **Adaptive generation.** Choose prompts by question type, answer from Top-3 context first, and expand the supplied context when a second attempt is needed.
+5. **Question-specific generation.** Choose prompts by question type, answer from Top-3 context first, and expand the supplied context when a second attempt is needed.
 
 The original report figure labels the embedding model as **BGE-M3**. The public notebook uses **BGE-large-en-v1.5**, normalized embeddings with FAISS `IndexFlatIP`, and **BGE-reranker-v2-m3**. It includes MiniLM fallbacks for model-loading failures.
 
@@ -232,7 +230,7 @@ WattBot-RAG-System/
   </tbody>
 </table>
 
-Source PDFs are downloaded separately using the metadata URLs. The PDFs in `docs/` are the project report and presentation.
+Source PDFs are not stored in this repository; they are downloaded from the URLs in `metadata.csv`. The PDFs in `docs/` are the project report and presentation.
 
 <table width="100%">
   <thead>
@@ -314,13 +312,13 @@ Generation produces structured JSON, which is mapped to these submission fields:
   </tbody>
 </table>
 
-Verified for **Attention Please** on October 14, 2026: [official Public leaderboard](https://www.kaggle.com/competitions/WattBot2025/leaderboard?tab=public) and [official Private leaderboard](https://www.kaggle.com/competitions/WattBot2025/leaderboard?tab=private). The competition has ended; **Private rank 4 is the final competition placement**. The Public score uses approximately 66% of test data; Private uses the other 34%. The report's 0.886 result is the Public score, not the final Private score.
+The [official Public leaderboard](https://www.kaggle.com/competitions/WattBot2025/leaderboard?tab=public) and [official Private leaderboard](https://www.kaggle.com/competitions/WattBot2025/leaderboard?tab=private) were checked on October 14, 2026. The competition has ended, so **Private rank 4 is the final placement**. The report's 0.886 result is the Public score; the final Private score is 0.840. Public and Private use different portions of the 282-question test set.
 
-The experiments follow three questions: **does including tables help sparse retrieval, does HERO improve evidence retrieval, and do those improvements carry across language models?** Retrieval is evaluated on internal question sets; the model comparison reproduces report scores from the competition, whose test file contains 282 questions. Official Public and Private scores use different subsets of that test set.
+The report evaluates three comparisons: BM25 with and without raw tables, baseline and HERO retrieval, and baseline and HERO answer scores across five language models. Retrieval metrics use internal question sets; the model comparison uses competition scores reported by the team.
 
 ### Experiment Configurations
 
-The development moves from a table-noise experiment to a routed baseline, then to HERO. The configurations below distinguish these stages:
+The report uses three BM25 configurations:
 
 <table width="100%">
   <thead><tr><th width="600" align="left">Configuration</th><th width="1400" align="left">Meaning</th></tr></thead>
@@ -331,11 +329,11 @@ The development moves from a table-noise experiment to a routed baseline, then t
   </tbody>
 </table>
 
-The retrieval tables reproduce report Tables 1 and 16; the model comparison reproduces Figure 5. Evaluation scope and differences from the saved notebook run are collected at the end of this section.
+The retrieval tables below reproduce report Tables 1 and 16; the model comparison reproduces Figure 5. Differences between the report and the saved notebook output are noted at the end of this section.
 
 ### 1. The Table Paradox: Text-Only vs. Hybrid BM25
 
-The baseline experiment compares a hybrid corpus containing text and raw Markdown tables with a text-only corpus. On the **39-query evaluation**, text-only retrieval matches or exceeds the hybrid version on every reported metric.
+The baseline experiment compares text with raw Markdown tables against a text-only corpus. Across **39 queries**, the text-only version matches or exceeds the hybrid version on every reported metric.
 
 <table width="100%">
   <thead><tr>
@@ -358,11 +356,11 @@ The baseline experiment compares a hybrid corpus containing text and raw Markdow
 
 Source: [report Table 1, page 4](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=4). Here, “hybrid” means text plus tables, not sparse–dense retrieval.
 
-Removing raw tables raises Recall@1 by **7.69 percentage points** and MRR by **0.0448**. The report attributes this to table-formatting noise: delimiters and disrupted structure dilute meaningful terms in BM25 scoring. Yet removing tables also removes numerical evidence. This trade-off motivates HERO's structured parsing, dense retrieval, and table-aware weighting.
+Removing raw tables raises Recall@1 by **7.69 percentage points** and MRR by **0.0448**. The report attributes this to table delimiters and disrupted structure weakening BM25 term matching. Because tables still contain necessary numerical evidence, HERO parses and weights them separately instead of removing them.
 
 ### 2. HERO Retrieval Performance
 
-HERO combines structured ingestion, sparse–dense retrieval, and reranking to improve evidence selection. The following table reproduces the report’s retrieval comparison; the configurations and evaluation samples are discussed in the evaluation notes.
+HERO combines structured ingestion, sparse–dense retrieval, and reranking. The table below reproduces the report's retrieval comparison; sample differences are documented in the evaluation note.
 
 <table width="100%">
   <thead><tr>
@@ -386,15 +384,11 @@ HERO combines structured ingestion, sparse–dense retrieval, and reranking to i
 
 Source: [report Table 16, page 9](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=9). Recall differences use `%` to show direct subtraction of the displayed percentages (percentage-point changes), not relative percentage growth. Values above reproduce the report; the evaluation caveat below explains differences from the saved notebook run.
 
-- **Coverage:** reported Recall@10 increases from 92.31% to 95.12%, a gain of **2.81 percentage points**.
-- **Early evidence:** Recall@1 increases by **1.00 percentage point**, indicating more questions have a relevant reference at the first retrieved position.
-- **Ranking:** nDCG@10 increases by **0.0048**, while MRR increases by **0.0034** in the report.
-
-Text-Only BM25 has higher reported Recall@1 and MRR, while HERO has slightly higher Recall@10. These runs are not a verified same-sample comparison. The stronger evidence for HERO’s end-to-end value is the cross-model answer-score improvement shown below.
+The largest reported difference is Recall@10 at **+2.81 percentage points**. Recall@1 changes by **+1.00 percentage point**, nDCG@10 by **+0.0048**, and MRR by **+0.0034**. Text-Only BM25 reports higher Recall@1 and MRR than HERO, while HERO reports higher Recall@10. These runs are not a verified same-sample comparison.
 
 ### 3. Evidence Coverage After Visual-Aware Ingestion
 
-Docling and EasyOCR expand the searchable corpus beyond prose. The report's corpus inventory contains **8,407 chunks**:
+Report Table 8 lists **8,407 searchable chunks** produced with Docling and EasyOCR:
 
 <table width="100%">
   <thead><tr>
@@ -410,9 +404,7 @@ Docling and EasyOCR expand the searchable corpus beyond prose. The report's corp
   </tbody>
 </table>
 
-Source: [report Table 8, page 6](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=6). OCR contributes 437 figure-derived chunks, while 153 chunks preserve table content. Content labels allow the retrieval system to weight these sources differently from prose.
-
-Counts follow Table 8; they describe searchable evidence, not a standalone OCR accuracy measurement.
+Source: [report Table 8, page 6](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=6). The counts describe searchable evidence, not OCR accuracy. Content labels allow the retrieval stage to assign different weights to prose, tables, and figure text.
 
 ### 4. Pipeline and Model Comparison
 
@@ -432,15 +424,13 @@ Counts follow Table 8; they describe searchable evidence, not a standalone OCR a
   </tbody>
 </table>
 
-Source: [report Figure 5, page 10](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=10). All five tested models improve with HERO in the report; this table is separate from the final Private standings above.
+Source: [report Figure 5, page 10](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=10). The report lists higher HERO scores for all five models. This comparison is separate from the final Private standings above.
 
-**GPT-4o has the largest absolute gain (+0.043)**, while **Gemini 3.0 Pro achieves the highest score in the report (0.886, also confirmed on the Public leaderboard)**. Gemini 3.0 Pro rises from 0.853 to 0.886, showing that retrieval improvements remain useful with a stronger answer model. Gemini 2.5 Pro rises from 0.807 to 0.821; this is the model initialized in the public HERO notebook.
+The largest reported difference is **+0.043 for GPT-4o**. **Gemini 3.0 Pro has the highest reported score, 0.886**, which matches the Public leaderboard score. The public HERO notebook initializes Gemini 2.5 Pro; its reported score changes from 0.807 to 0.821.
 
-### 5. Conclusions and Future Work
+### 5. Limitations and Future Work
 
-The experiments connect the table-noise problem to a practical retrieval redesign: preserve text, tables, and OCR as distinct evidence types; combine lexical and semantic search; rerank candidates; and adapt the answer context to the question.
-
-The report proposes **learned fusion weights**, **multilingual corpora**, and **hierarchical indexing for larger collections** as future directions. The current weights and question routing remain heuristic. The two-stage generation design balances an initial narrow context against a broader fallback, but its independent benefit is not quantified in these tables.
+HERO's fusion weights and question routing are heuristic. The reported experiments also do not isolate the effect of two-stage generation from the retrieval changes. The report lists **learned fusion weights**, **multilingual corpora**, and **hierarchical indexing for larger collections** as future work.
 
 <details>
 <summary>Evaluation scope and reproducibility details</summary>
@@ -460,7 +450,7 @@ These instructions are based on the checked-in code. **A clean-environment, end-
 ### HERO Notebook
 
 1. Open the [HERO notebook](notebook/Gemini_2_5_pro_新pipeline_0_821.ipynb) in Google Colab. Upload the three CSV files from `data/` to `/content/`.
-2. The following consolidated dependency command is derived from the workflow's imports; version compatibility has not been tested. Review the notebook's existing installation cells before running it:
+2. Install the dependencies used by the workflow. Version compatibility has not been tested, so review the notebook's existing installation cells first:
 
 ```python
 %pip install docling easyocr opencv-python-headless rank-bm25 sentence-transformers faiss-cpu pandas numpy requests pdfminer.six pillow tqdm google-genai
@@ -488,7 +478,7 @@ The code uses these locations:
 /content/submission_enhanced.csv
 ```
 
-Check download failures and the OCR chunk count before generating answers. OCR extraction also depends on the Docling version and image representation; the import additions alone do not establish full compatibility. Model downloads, API access, and source-document availability are required.
+Check download failures and the OCR chunk count before generating answers. A clean run also requires compatible Docling image objects, model downloads, API access, and the source documents.
 
 ### Baseline Notebook
 
@@ -499,7 +489,7 @@ The [baseline notebook](notebook/v1_gemini_2_5pro.ipynb) contains several experi
 3. Run the document-processing cells needed to create `/content/hybrid_chunks.json`. The final generation cell reads that file, plus `metadata.csv` and `test_Q.csv` from `INPUT_DIR`. Check that all three exist before running it.
 4. Before the final generation cell, make sure `google-genai` is installed; the notebook imports it but has no installation cell for it. Replace the placeholder `GEMINI_API_KEY = "# ⚠️ 請替換成你的 API Key"` with a valid key, then run the cell to generate a submission CSV. It calls `main()` automatically and sends the test questions to the Gemini API. Keep your key out of any notebook you share.
 
-The notebook also includes separate PDF parsing and retrieval tests. Those cells are experiments rather than additional steps in the final generation function. The dependency cells install Python packages and, for OCR, Poppler and Tesseract through `apt-get`. This setup is based on reading the notebook; a clean end-to-end run has not been verified.
+The notebook also includes separate PDF parsing and retrieval tests that are not part of the final generation function. Its setup cells install Python packages, Poppler, and Tesseract. A clean end-to-end run has not been verified.
 
 ## Team Members
 
@@ -513,7 +503,7 @@ The notebook also includes separate PDF parsing and retrieval tests. Those cells
 
 ## Related Work
 
-See the [technical report](docs/WattBot2025_AttentionPlease_Technical_Report.pdf) for the literature review and the KohakuRAG case study that informed the team's approach.
+The [technical report](docs/WattBot2025_AttentionPlease_Technical_Report.pdf) includes the literature review and a KohakuRAG case study.
 
 ## License
 

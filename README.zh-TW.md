@@ -25,16 +25,14 @@
 
 ## 專案介紹
 
-WattBot 的核心任務是：**找出支持 AI 永續資訊的實際證據。** 答案可能藏在表格的一個數值、圖像中的標籤，或使用不同單位的文獻段落中。
+WattBot 2025 要求系統根據技術文件，回答 AI 工作負載對環境影響的問題。答案常來自表格或圖像中的數值，並需要統一單位。
 
-系統除了回答問題，還需要提供標準化數值、單位、文件引用與支持內容；若資料不足，也必須辨識無法回答的情況。
-
-本專案包含兩套方法：
+本專案收錄 Attention Please 團隊開發的兩套方法。兩者都會輸出標準化答案、文件引用與證據摘錄；來源文件不足時則回傳無法回答：
 
 - **BM25 Baseline**：結合文字與表格檢索、問題路由，以及兩階段答案生成。
 - **HERO**：加入版面解析、OCR、稀疏與稠密檢索、加權排名融合、CrossEncoder 重排序及題型專屬提示詞。
 
-研究的關鍵是**表格悖論（Table Paradox）**：加入原始表格可能干擾關鍵字檢索，刪除表格又會失去重要數值。HERO 保留內容類型，透過加權融合提高表格與 OCR 證據的可見度。
+Baseline 實驗發現，直接加入 Markdown 表格會降低多項 BM25 檢索指標，但刪除表格也會失去數值證據。HERO 因此分開保存文字、表格與 OCR 區塊，並在檢索時分別設定權重。
 
 ## 技術架構
 
@@ -85,7 +83,7 @@ WattBot 的核心任務是：**找出支持 AI 永續資訊的實際證據。** 
   </tbody>
 </table>
 
-上述設定以公開 notebook 為準；技術報告另包含其他實驗配置。
+上表以公開 notebook 為準；技術報告另記錄未收錄於 notebook 的實驗配置。
 
 ## 系統架構
 
@@ -95,7 +93,7 @@ WattBot 的核心任務是：**找出支持 AI 永續資訊的實際證據。** 
 
 *擷取自[技術報告第 5 頁 Figure 2](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=5)。*
 
-Baseline 將文件處理與問答分成以下步驟：
+Baseline 包含以下五個步驟：
 
 1. **文件擷取**：解析 PDF，整理文字與表格區塊。
 2. **建立索引**：使用 BM25 進行關鍵字與數值比對。
@@ -111,13 +109,13 @@ Baseline 將文件處理與問答分成以下步驟：
 
 *擷取自[技術報告第 7 頁 Figure 4](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=7)。*
 
-HERO 在 Baseline 基礎上加入五個階段：
+HERO 在 Baseline 上加入五個階段：
 
 1. **視覺證據擷取**：Docling 解析文件元素，EasyOCR 與 OpenCV 擷取圖像中的文字，保留區塊類型與文件 ID。
 2. **雙路檢索**：BM25 比對精確詞彙與數值，稠密向量補足語意相近但用詞不同的證據。
 3. **加權倒數排名融合**：透過 RRF 合併排名，設定**表格 ×2.0、OCR ×1.8、作者／年份匹配 ×2.0**。
 4. **CrossEncoder 重排序**：聯合評估問題與候選區塊，優先保留相關證據。
-5. **自適應生成**：依題型選擇提示詞，先用 Top-3 上下文回答，需要第二次嘗試時再擴大傳入的證據範圍。
+5. **題型生成**：依題型選擇提示詞，先用 Top-3 上下文回答，需要第二次嘗試時再擴大傳入的證據範圍。
 
 原圖標示的模型為 **BGE-M3**；公開 notebook 實際使用 **BGE-large-en-v1.5**、正規化向量的 FAISS `IndexFlatIP` 與 **BGE-reranker-v2-m3**，並提供 MiniLM 載入失敗備援。
 
@@ -218,7 +216,7 @@ WattBot-RAG-System/
   </tbody>
 </table>
 
-原始文獻需依 metadata 網址另外下載；`docs/` 的 PDF 是專案報告與簡報。
+Repository 不包含原始文獻，需透過 `metadata.csv` 的網址下載；`docs/` 的 PDF 是專案報告與簡報。
 
 <table width="100%">
   <thead>
@@ -300,13 +298,13 @@ WattBot-RAG-System/
   </tbody>
 </table>
 
-於 2026 年 10 月 14 日核對 **Attention Please** 的[官方 Public 排行榜](https://www.kaggle.com/competitions/WattBot2025/leaderboard?tab=public)與[官方 Private 排行榜](https://www.kaggle.com/competitions/WattBot2025/leaderboard?tab=private)。競賽已結束，**最終競賽名次為 Private 第 4 名**。Public 約使用 66% 測試資料，Private 使用其餘 34%。報告中的 0.886 是 Public 分數，最終 Private 分數為 0.840。
+2026 年 10 月 14 日核對的[官方 Public 排行榜](https://www.kaggle.com/competitions/WattBot2025/leaderboard?tab=public)與[官方 Private 排行榜](https://www.kaggle.com/competitions/WattBot2025/leaderboard?tab=private)顯示，競賽已結束，**最終名次為 Private 第 4 名**。報告中的 0.886 是 Public 分數；最終 Private 分數為 0.840。兩個榜單使用 282 題測試集中的不同子集。
 
-實驗圍繞三個問題：**加入表格是否有利於 BM25、HERO 是否改善證據檢索，以及不同語言模型是否都能受益？** 檢索評估使用內部問題集，模型比較沿用報告中的競賽分數，測試檔案共有 282 題；官方 Public 與 Private 分數各使用其中不同子集。
+報告比較三組結果：加入與移除原始表格的 BM25、Baseline 與 HERO 的檢索結果，以及兩套 pipeline 搭配五種語言模型的答案分數。檢索指標使用內部問題集；模型比較使用團隊記錄的競賽分數。
 
 ### 實驗配置
 
-本專案從表格雜訊實驗出發，發展路由式 Baseline，再加入 HERO 的混合檢索。以下配置對應這些階段：
+報告使用三種 BM25 配置：
 
 <table width="100%">
   <thead><tr><th width="600" align="left">配置</th><th width="1400" align="left">定義</th></tr></thead>
@@ -317,11 +315,11 @@ WattBot-RAG-System/
   </tbody>
 </table>
 
-檢索表格依報告 Table 1、Table 16 列示，模型比較依 Figure 5 列示。評估範圍與 notebook 留存輸出的差異集中說明於本節末尾。
+下方檢索表格重現報告 Table 1 與 Table 16；模型比較重現 Figure 5。報告與 notebook 留存輸出的差異列於本節末尾。
 
 ### 1. 表格悖論：純文字與混合 BM25 比較
 
-Baseline 比較「文字加原始 Markdown 表格」與「純文字」兩種語料。在 **39 題評估**中，純文字版本的所有指標都優於或等於混合版本。
+Baseline 比較「文字加原始 Markdown 表格」與「純文字」兩種語料。在 **39 題**中，純文字版本的所有指標都優於或等於混合版本。
 
 <table width="100%">
   <thead><tr>
@@ -344,11 +342,11 @@ Baseline 比較「文字加原始 Markdown 表格」與「純文字」兩種語�
 
 來源：[報告第 4 頁 Table 1](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=4)。這裡的 hybrid 指文字與表格混合，不是稀疏與稠密檢索。
 
-移除原始表格後，Recall@1 提高 **7.69 個百分點**，MRR 增加 **0.0448**。報告將原因歸於表格格式雜訊：分隔符號與破碎結構稀釋關鍵詞的 BM25 訊號。然而，刪除表格也會失去數值證據。這個取捨促成 HERO 的結構化解析、語意檢索與表格加權設計。
+移除原始表格後，Recall@1 提高 **7.69 個百分點**，MRR 增加 **0.0448**。報告將原因歸於表格分隔符號與破碎結構削弱 BM25 的詞彙比對。由於表格仍包含必要的數值證據，HERO 改為分開解析並加權，而不是直接刪除。
 
 ### 2. HERO 檢索品質
 
-HERO 透過結構化擷取、稀疏與稠密檢索及重排序改善證據選擇。下表呈現報告中的檢索比較，配置與評估樣本差異集中列於評估說明。
+HERO 使用結構化擷取、稀疏與稠密檢索及重排序。下表重現報告中的檢索比較；樣本差異列於評估說明。
 
 <table width="100%">
   <thead><tr>
@@ -372,15 +370,11 @@ HERO 透過結構化擷取、稀疏與稠密檢索及重排序改善證據選擇
 
 來源：[報告第 9 頁 Table 16](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=9)。Recall 差異以 `%` 顯示兩個百分比直接相減的結果（百分點變化），並非相對成長率。上表忠實呈現報告值，與 notebook 留存輸出的差異另列於下方評估說明。
 
-- **證據覆蓋率**：Recall@10 從 92.31% 提升至 95.12%，增加 **2.81 個百分點**。
-- **首位命中**：Recall@1 增加 **1.00 個百分點**，代表更多問題能在第一個檢索位置找到相關引用。
-- **排序品質**：報告中的 nDCG@10 增加 **0.0048**，MRR 增加 **0.0034**。
-
-Text-Only BM25 的報告 Recall@1 與 MRR 較高，HERO 的 Recall@10 則略高；這些結果並非已驗證的同樣本比較。下方跨模型答案分數的提升，更直接呈現 HERO 在完整問答流程中的價值。
+報告中差異最大的是 Recall@10，增加 **2.81 個百分點**；Recall@1 增加 **1.00 個百分點**，nDCG@10 增加 **0.0048**，MRR 增加 **0.0034**。Text-Only BM25 的 Recall@1 與 MRR 較高，HERO 的 Recall@10 較高；這些結果並非已驗證的同樣本比較。
 
 ### 3. 視覺證據擷取後的語料組成
 
-Docling 與 EasyOCR 將可搜尋內容從一般段落擴展至表格和圖像文字。報告的語料統計共 **8,407 個區塊**：
+報告 Table 8 列出 Docling 與 EasyOCR 產生的 **8,407 個可搜尋區塊**：
 
 <table width="100%">
   <thead><tr>
@@ -396,9 +390,7 @@ Docling 與 EasyOCR 將可搜尋內容從一般段落擴展至表格和圖像文
   </tbody>
 </table>
 
-來源：[報告第 6 頁 Table 8](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=6)。其中 437 個區塊來自圖像 OCR，153 個區塊保留表格內容。類型標籤讓檢索階段能為不同證據來源配置權重。
-
-數量統一採用 Table 8，反映可搜尋證據規模，不代表 OCR 的獨立準確率。
+來源：[報告第 6 頁 Table 8](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=6)。這些數量反映可搜尋證據規模，不代表 OCR 準確率。類型標籤讓檢索階段能分別設定文字、表格與圖像文字的權重。
 
 ### 4. 不同模型與 Pipeline 比較
 
@@ -418,15 +410,13 @@ Docling 與 EasyOCR 將可搜尋內容從一般段落擴展至表格和圖像文
   </tbody>
 </table>
 
-來源：[報告第 10 頁 Figure 5](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=10)。報告中五種模型搭配 HERO 均有成績提升；此表與上方最終 Private 排名分開呈現。
+來源：[報告第 10 頁 Figure 5](docs/WattBot2025_AttentionPlease_Technical_Report.pdf#page=10)。報告記錄的五種模型分數在 HERO 欄位都較高；此表與上方最終 Private 排名分開呈現。
 
-**GPT-4o 的絕對提升最大（+0.043）**，**Gemini 3.0 Pro 的報告分數最高（0.886，亦已由 Public 榜單確認）**。Gemini 3.0 Pro 從 0.853 提升至 0.886，說明即使搭配較強的生成模型，改善證據檢索仍有幫助。Gemini 2.5 Pro 則從 0.807 提升至 0.821，也是公開 HERO notebook 初始化使用的模型。
+差異最大的是 **GPT-4o 的 +0.043**。**Gemini 3.0 Pro 的報告分數最高，為 0.886**，與 Public 榜單分數相同。公開 HERO notebook 初始化的是 Gemini 2.5 Pro；其報告分數由 0.807 變為 0.821。
 
-### 5. 結論與未來方向
+### 5. 限制與未來工作
 
-實驗呈現從表格雜訊到檢索改造的完整脈絡：保留文字、表格與 OCR 類型，結合詞彙與語意搜尋，再重排序候選證據，依問題調整生成上下文。
-
-報告提出未來可研究**學習式融合權重**、**多語言語料**與**大型文件集合的階層索引**。目前權重與問題路由仍是啟發式規則；兩階段生成在較小上下文與較廣 fallback 之間取捨，但上表未量化其獨立效果。
+HERO 的融合權重與問題路由仍是啟發式規則；上述實驗也沒有將兩階段生成的效果與檢索改動分開測量。報告提出的後續方向包括**學習式融合權重**、**多語言語料**與**大型文件集合的階層索引**。
 
 <details>
 <summary>評估範圍與重現細節</summary>
@@ -446,7 +436,7 @@ Notebook 的 Recall@K 判斷前 K 個結果是否命中任一標準引用，實�
 ### HERO Notebook
 
 1. 在 Google Colab 開啟 [HERO notebook](notebook/Gemini_2_5_pro_新pipeline_0_821.ipynb)，將 `data/` 的三份 CSV 上傳到 `/content/`。
-2. 下列套件清單依流程使用的匯入整理，尚未驗證版本相容性；請先檢查 notebook 已有的安裝 cell：
+2. 安裝流程使用的套件。尚未驗證版本相容性，執行前請先檢查 notebook 既有的安裝 cell：
 
 ```python
 %pip install docling easyocr opencv-python-headless rank-bm25 sentence-transformers faiss-cpu pandas numpy requests pdfminer.six pillow tqdm google-genai
@@ -474,7 +464,7 @@ client = genai.Client(api_key=userdata.get("GOOGLE_API_KEY"))
 /content/submission_enhanced.csv
 ```
 
-生成答案前，請檢查文件下載失敗清單與 OCR 區塊數。OCR 也受 Docling 版本與圖像物件格式影響，補上匯入不代表已解決所有相容性問題。流程需要下載模型、可用的 API 存取與原始文獻。
+生成答案前，請檢查文件下載失敗清單與 OCR 區塊數。完整執行還需要相容的 Docling 圖像物件、模型下載、API 存取與原始文獻。
 
 ### Baseline Notebook
 
@@ -485,7 +475,7 @@ client = genai.Client(api_key=userdata.get("GOOGLE_API_KEY"))
 3. 執行產生 `/content/hybrid_chunks.json` 所需的文件處理程式格。最後的答案生成程式會讀取這個檔案，以及 `INPUT_DIR` 中的 `metadata.csv` 和 `test_Q.csv`；執行前先確認三個檔案都存在。
 4. 執行最後的答案生成程式格之前，先確認已安裝 `google-genai`；notebook 會匯入它，但沒有對應的安裝程式格。將 `GEMINI_API_KEY = "# ⚠️ 請替換成你的 API Key"` 這行的佔位文字換成有效金鑰，再執行該格產生提交用 CSV。這格會自動呼叫 `main()`，並將測試題送到 Gemini API。分享 notebook 前，請移除金鑰。
 
-Notebook 另有 PDF 解析與檢索測試；它們是獨立實驗，不是最後答案生成函式的額外步驟。安裝程式格會安裝 Python 套件，OCR 所需的 Poppler 與 Tesseract 則透過 `apt-get` 安裝。以上步驟依公開程式整理，尚未從乾淨環境完整驗證。
+Notebook 另有 PDF 解析與檢索測試，不屬於最後答案生成函式。設定 cell 會安裝 Python 套件、Poppler 與 Tesseract；尚未從乾淨環境驗證完整流程。
 
 ## 團隊成員
 
@@ -499,7 +489,7 @@ Notebook 另有 PDF 解析與檢索測試；它們是獨立實驗，不是最後
 
 ## 相關工作
 
-文獻回顧，以及啟發團隊方法設計的 KohakuRAG 案例，請參閱[技術報告](docs/WattBot2025_AttentionPlease_Technical_Report.pdf)。
+[技術報告](docs/WattBot2025_AttentionPlease_Technical_Report.pdf)包含文獻回顧與 KohakuRAG 案例。
 
 ## 授權
 
